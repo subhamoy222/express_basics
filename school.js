@@ -6,12 +6,7 @@ const jwtSecret  = '123456';
 
 main().catch(err => console.log(err));
 
-async function main() {
-  await mongoose.connect('mongodb+srv://subhamsasmal396:hello@cluster0.rudguct.mongodb.net/myDatabase', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  });
-}
+
 
 
 app.use(express.json());
