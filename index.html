@@ -1,19 +1,51 @@
-<!DOCTYPE html>
 <html>
-    <script>
-        function addNumbers(){
-            const firstNumber = parseInt(document.getElementById("first_number").value);
-            const secondNumber = parseInt(document.getElementById("second_number").value);  
-            const sum = firstNumber + secondNumber;
-            document.getElementById("final_sum").innerHTML = "The sum is: " + sum;
-        }
-    </script>
-    <body>
-        <input  
-        id = "first_number" type="number"  placeholder="first number"><br></br>
-        <input id = "second_number" type="number"  placeholder="second number"><br></br>
-        <button onclick="addNumbers()"id="add">Add</button><br></br>
-        <div id = "final_sum"></div>
-        
-    </body>
+  <body>
+    <input type="text" id="ip1" placeholder="Enter your yoga">
+    <input type="text" id="ip2" placeholder="Enter your yoga">
+    <button id="btn">Submit</button>
+    <div id="container"></div>
+  </body>
+
+  <script>
+    function createchild(title, description, id) {
+      const child = document.createElement("div");
+      const firstGrandParent = document.createElement("div");
+      firstGrandParent.innerHTML = title;
+      const secondGrandParent = document.createElement("div");
+      secondGrandParent.innerHTML = description;
+      const thirdGrandParent = document.createElement("button");
+      thirdGrandParent.innerHTML = "Mark as done";
+      thirdGrandParent.setAttribute("onclick", `markAsDone(${id})`);
+      child.appendChild(firstGrandParent);
+      child.appendChild(secondGrandParent);
+      child.appendChild(thirdGrandParent);
+      child.setAttribute("id", id);
+      return child;
+    }
+
+    function updateDomAcctostates(state) {
+      const parent = document.getElementById("container");
+      parent.innerHTML = "";
+      for (let i = 0; i < state.length; i++) {
+        const child = createchild(state[i].title, state[i].description, state[i].id);
+        parent.appendChild(child);
+      }
+    }
+
+    function markAsDone(id) {
+      // Placeholder function to prevent errors
+      console.log("Marking as done:", id);
+    }
+
+    
+    window.setInterval(async function () {
+  try {
+    const res = await fetch("https://sum-server.100xdevs.com/todos");
+    const data = await res.json();
+    updateDomAcctostates(data.todos);
+  } catch (error) {
+    console.error("Failed to fetch todos:", error.message);
+  }
+}, 1000);
+  </script>
 </html>
