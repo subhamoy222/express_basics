@@ -1,85 +1,43 @@
 const express = require('express');
 const app = express();
 const port = 3000;
-const jwt = require('jsonwebtoken');
-const jwtsecrte = "1234567890";
-const mongoose = require('mongoose');
 const zod = require('zod');
+const jwt = require('jsonwebtoken');
+const jwtsecret = "1234567890";
 
-
-function authmiddleware(req, res, next) {
-    const token = req.headers['authorization'];
-    if (!token) {   
-        return res.status(401).send('Unauthorized: No token provided');
+app.use(errormiddleware);
+app.use(express.json());
+function authenticationmiddleware(req,res,next){
+    const name = req.body.name;
+    const password = req.body.password;
+    const schema = zod.string().min(8).max(20);
+    const response = schema.safeParse(password);
+    if(!response.success){
+        err = new error('Bad Request: Invalid Password');
+        err.status = 400;
     }
-    jwt.verify(token, jwtsecrte, (err, decoded) => {
-        if (err) {
-            return res.status(403).send('Forbidden: Invalid token');
-        }
-        req.user = decoded;
+    else{
+        const jwttoken = jwt.sign({name:name},jwtsecret,{expiresIn:1000});
+        res.setHeader('Authorization' , `Bearer ${jwttoken}`);
         next();
-    });
+
+    }
+
 }
 
 
-app.use(express.json());
-
-app.post('/register',(req,res)=>{
-    const name = req.body.name;
-    const email = req.body.email;
-    const password = req.body.password;
-
-    const personschema = zod.email();
-    const response = personschema.safeParse(email);
-    if (!response.success) {
-        return res.status(400).send('Bad Request: Invalid email format');
-    }   
-   else{
-    return res.send(`User ${name} registered successfully with email ${email}`);
-   }
-
-    
+app.post('/', authenticationmiddleware, (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    res.send(`Token: ${token}, Name: ${req.body.name}`);
 });
 
-app.post('/login',async(req,res)=>{
-    const email = req.body.email;
-    const password = req.body.password;
-    if(!email || !password) {
-        return res.status(400).send('Bad Request: Email and password are required');
+function errormiddleware(err,req,res,next){
+    if(err.status === 400){
+        res.send('Bad Request: Invalid Password');
     }
     else{
-        const token  = jwt.sign({email:email},jwtsecrte,{expiresIn:'1h'});
-        return res.status(200).json({
-            message: `User logged in successfully`,
-            token: token    
-        })
+        res.status(500).send(`Error: ${err.message}`);
     }
-});
-
-app.get('/profile',authmiddleware, async(req,res)=>{
-    const email = req.query.email;
-    if(!email){
-        return res.status(400).send('Bad Request: Email is required');
-    }
-    else{
-        jwt.verify(req.headers['authorization'],jwtsecrte,(err,decoded)=>{
-            if(err){
-                return res.status(403).send('Forbidden: Invalid token');
-            }
-            return res.status(200).json({
-                message: `User profile for ${decoded.email}`,
-                user: {
-                    email: decoded.email
-                }
-            });
-        })
-    }
-})
-
-
-
-
-
-
+}
 
 app.listen(port);
